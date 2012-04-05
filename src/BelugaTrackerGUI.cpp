@@ -233,9 +233,13 @@ void BelugaTrackerFrame::initController()
     for(unsigned int i = 0; i < 4; i++)
     {
         m_apWaypointController[i] = new BelugaWaypointControlLaw();
-        m_apLowLevelController[i] = new BelugaLowLevelControlLaw();
+		m_apHITLController[i] = new BelugaHITLControlLaw();
+        m_apBoundaryController[i] = new BelugaBoundaryControlLaw();
+		m_apLowLevelController[i] = new BelugaLowLevelControlLaw();
         m_Controller.appendControlLawToBot(i, m_apWaypointController[i], mt_CONTROLLER_NO_GC);
-        m_Controller.appendControlLawToBot(i, m_apLowLevelController[i], mt_CONTROLLER_NO_GC);
+        m_Controller.appendControlLawToBot(i, m_apHITLController[i], mt_CONTROLLER_NO_GC);
+		m_Controller.appendControlLawToBot(i, m_apBoundaryController[i], mt_CONTROLLER_NO_GC);
+		m_Controller.appendControlLawToBot(i, m_apLowLevelController[i], mt_CONTROLLER_NO_GC);
 
         m_adWaypointX[i] = BELUGA_WAYPOINT_NONE;
         m_adWaypointY[i] = BELUGA_WAYPOINT_NONE;

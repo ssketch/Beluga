@@ -85,6 +85,8 @@ protected:
 
     mt_Controller m_Controller;
     BelugaWaypointControlLaw* m_apWaypointController[4];
+	BelugaHITLControlLaw* m_apHITLController[4];
+	BelugaBoundaryControlLaw* m_apBoundaryController[4];
     BelugaLowLevelControlLaw* m_apLowLevelController[4];
     void initController();
 
