@@ -45,7 +45,7 @@ class BelugaBoundaryControlLaw : public mt_ControlLaw
 public:
     BelugaBoundaryControlLaw();
 	
-    mt_dVector_t doControl(const mt_dVector_t& state,  // what is going on here? &?
+    mt_dVector_t doControl(const mt_dVector_t& state,
                            const mt_dVector_t& u_in);
 	
     bool doActivate(bool value = true){m_bActive = value;  return m_bActive;};
@@ -63,7 +63,7 @@ class BelugaHITLControlLaw : public mt_ControlLaw
 public:
     BelugaHITLControlLaw();
 	
-    mt_dVector_t doControl(const mt_dVector_t& state,  // what is going on here? &?
+    mt_dVector_t doControl(const mt_dVector_t& state,
                            const mt_dVector_t& u_in);
 	
     bool doActivate(bool value = true){m_bActive = value;  return m_bActive;};

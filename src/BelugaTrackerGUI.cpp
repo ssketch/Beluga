@@ -423,6 +423,16 @@ void BelugaTrackerFrame::doIPCExchange()
         
         bool r = m_IPCClient.setAllPositions(&X, &Y, &Z);
         r &= m_IPCClient.getControls(robots, &mode, &X, &Y, &Z);
+		
+		// set timing parameter for HITLControlLaw (m_dTiming) from IPC
+		std::string params("");
+		r &= m_IPCClient.getParams(&params);
+		double timing = parseParamString(params);
+		for(unsigned int i = 0; i < 4; i++)
+		{
+			m_apHITLController[i]->m_dTiming = timing;
+		}
+		
         if(!r)
         {
             MT_ShowErrorDialog(this, wxT("Error during exchange with IPC server."));

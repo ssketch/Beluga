@@ -204,8 +204,8 @@ mt_dVector_t BelugaLowLevelControlLaw::doControl(const mt_dVector_t& state,
 
 BelugaBoundaryControlLaw::BelugaBoundaryControlLaw()
 	: mt_ControlLaw(3 /* # control inputs */,
-					1 /* # parameters */),  // is this one parameter "m_dFcr"?
-	  m_bActive(true),  // not sure if this should be true or false?
+					1 /* # parameters */),
+	  m_bActive(true),
 	  m_dFcr(5.0e-3)  // repulsive force constant (adjust to fit boundaries)
 {
 }
@@ -309,9 +309,9 @@ mt_dVector_t BelugaBoundaryControlLaw::doControl(const mt_dVector_t& state,
 
 BelugaHITLControlLaw::BelugaHITLControlLaw()
 	: mt_ControlLaw(3 /* # control inputs */,
-					2 /* # parameters */),  // are these two parameters "m_dTiming" and "m_dThreshold"?
-	m_bActive(true),  // not sure if this should be true or false?
-	m_dTiming(/*read in*/),  // time for robot to travel between waypoints (msec)
+					2 /* # parameters */),
+	m_bActive(true),
+	m_dTiming(7500),   // time for robot to travel between waypoints (msec), will be set either in controller or js
 	m_dThreshold(1.0)  // distance from waypoint at which robot starts to decrease speed from max (m)
 {
 }
@@ -340,8 +340,8 @@ mt_dVector_t BelugaHITLControlLaw::doControl(const mt_dVector_t& state,
     double dy = to_y - y;
 	double d = sqrt(dx*dx + dy*dy);
 	
-	/* convert distance into a forward speed */
-	double maxSpeed = 1.5*((2*DEFAULT_TANK_RADIUS)/m_dTiming);
+	/* convert distance into a forward speed (m/s) */
+	double maxSpeed = 1.5*((2*DEFAULT_TANK_RADIUS)/m_dTiming)*1000;
 	if (d < m_dThreshold)
 	{
 		u_speed = (maxSpeed/m_dThreshold)*d;
