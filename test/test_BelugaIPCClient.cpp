@@ -1,16 +1,6 @@
+#include "BelugaTest.h"
+
 #include "BelugaIPCClient.h"
-
-const int ERROR = -1;
-const int OK = 0;
-
-#define START_TEST(x) std::cout << x << "... ";
-#define RETURN_ERROR(x) { std::cerr << x << std::endl; return ERROR; }
-#define RETURN_ERROR_ELSE_OK(x) RETURN_ERROR(x) else { std::cout << "OK" << std::endl; }
-
-#define DO_TEST(desc, cond, err_msg) \
-    START_TEST(desc); \
-    if(cond) RETURN_ERROR_ELSE_OK(err_msg);
-
 
 enum OP
 {
@@ -19,81 +9,6 @@ enum OP
     GET_CONTROLS,
     SET_CONTROLS
 };
-
-double randomfloat()
-{
-
-    double f;
-#ifdef _WIN32
-    f = ((rand() % 1000) / 1000.0);
-#else  
-    f = ((rand() % 1000000) / 1000000.0);
-#endif
-    return 3*(f - 0.5);
-}
-
-std::vector<double> randomVector(unsigned int size)
-{
-    std::vector<double> r(size);
-
-    for(unsigned int i = 0; i < size; i++)
-    {
-        r[i] = randomfloat();
-    }
-    return r;
-}
-
-bool eq_wf(double a, double b)
-{
-    char a_s[16];
-    char b_s[16];
-
-    sprintf(a_s, "%4.3f", a);
-    sprintf(b_s, "%4.3f", b);
-
-    return (strncmp(a_s, b_s, 16) == 0);
-}
-
-bool check_doubles_match(double a, double a_exp,
-                         double b, double b_exp,
-                         double c, double c_exp,
-                         const char* a_label,
-                         const char* b_label,
-                         const char* c_label,
-                         std::string* err_msg)
-{
-    std::ostringstream ss(*err_msg);
-    if(!eq_wf(a, a_exp) || !eq_wf(b, b_exp) || !eq_wf(c, c_exp))
-    {
-        ss << std::endl << "Mismatch error: "
-           << "\tExpected " << a_label << "to be " << a_exp << ", got " << a << std::endl
-           << "\tExpected " << b_label << "to be " << b_exp << ", got " << b << std::endl
-           << "\tExpected " << c_label << "to be " << c_exp << ", got " << c << std::endl;
-        *err_msg = ss.str();
-        return false;
-    }
-    return true;
-}
-
-bool check_vector_match(const std::vector<double>& a,
-                        const std::vector<double>& a_exp,
-                        const std::vector<double>& b,
-                        const std::vector<double>& b_exp,
-                        const std::vector<double>& c,
-                        const std::vector<double>& c_exp,
-                        const char* a_label,
-                        const char* b_label,
-                        const char* c_label,
-                        std::string* err_msg)
-{
-    bool r = true;
-    for(unsigned int i = 0; i < a.size(); i++)
-    {
-        r &= check_doubles_match(a[i], a_exp[i], b[i], b_exp[i], c[i], c_exp[i],
-                                 a_label, b_label, c_label, err_msg);
-    }
-    return r;
-}
 
 bool check_single(belugaIPCClient* client,
                            OP op,
@@ -316,6 +231,25 @@ bool check_all(belugaIPCClient* client,
     
 }
 
+bool check_params(belugaIPCClient* client, std::string params_in, std::string* err_msg)
+{
+    std::string orig_params(params_in);
+
+    /* setParams sets the value of params_in to whatever the server
+     * responds with */
+    bool r = client->setParams(&params_in);
+    
+    if(!r || (orig_params != params_in))
+    {
+        *err_msg += "\nError setting params on server.  Reponse was \"";
+        *err_msg += params_in;
+        *err_msg += "\".";
+        return false;
+    }
+
+    return true;
+}
+
 int main(int argc, char** argv)
 {
     belugaIPCClient client("127.0.0.1", 1234);
@@ -324,7 +258,7 @@ int main(int argc, char** argv)
 
     DO_TEST("Check connection", !client.doConnect(&motd), "Unable to connect to server.");
     
-    std::string expected_motd("Welcome to BelugaServer, client ");
+    std::string expected_motd("Welcome to Beluga IPC Server, client ");
 
     DO_TEST("Check MOTD",
             expected_motd.compare(0, expected_motd.size(), motd, 0, expected_motd.size()) != 0,
@@ -685,8 +619,12 @@ int main(int argc, char** argv)
     DO_TEST("Checking set all controls (kinematics) ",
             !check_all(&client, SET_CONTROLS, x, y, z, &err_msg, &mode),
             err_msg);
+
+    std::string params = "abc def";
+    DO_TEST("Checking set params",
+            !check_params(&client, params, &err_msg),
+            err_msg);
     
-    
-        std::cout << std::endl << "\tAll tests pass!" << std::endl;
+    std::cout << std::endl << "\tAll tests pass!" << std::endl;
     return OK;
 }
