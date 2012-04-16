@@ -156,7 +156,7 @@ mt_dVector_t BelugaLowLevelControlLaw::doControl(const mt_dVector_t& state,
     double u_steer = (K_omega/(K_d1*speed_normalization_factor*r_1))*u_turn;
     double u_vthrust = 0;
 
-    if(u_vert != 0.0)
+    if (u_vert != 0.0)
     {
         /* need z in the vertical thrust controller */
         double z = state[BELUGA_STATE_Z];
@@ -178,21 +178,21 @@ mt_dVector_t BelugaLowLevelControlLaw::doControl(const mt_dVector_t& state,
         double r_down = r_up;     // same
 
         /* can only calculate the determinant part if D > 0 */
-        if(D_up > 0)
+        if (D_up > 0)
         {
             r_up += 0.25*sqrt(D_up);
         }
-        if(D_down > 0)
+        if (D_down > 0)
         {
             r_down += 0.25*sqrt(D_down);
         }
 
         /* note we favor up control if both have solutions */
-        if(D_down > 0)
+        if (D_down > 0)
         {
             u_vthrust = -r_down;
         }
-        if(D_up > 0)
+        if (D_up > 0)
         {
             u_vthrust = r_up;
         }

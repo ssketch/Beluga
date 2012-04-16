@@ -28,8 +28,8 @@ const unsigned int DEFAULT_H_THRESH_LOW = 10;
 const unsigned int DEFAULT_S_THRESH_LOW = 0;
 const unsigned int DEFAULT_S_THRESH_HIGH = 255;
 
-const double PI = 3.141592;	 // do I need this?
-const double DEFAULT_TANK_RADIUS = 3.2;  // is this okay to do?
+const double PI = 3.141592;
+const double DEFAULT_TANK_RADIUS = 3.2;
 const double DEFAULT_WATER_DEPTH = 2.286;
 
 /* tank radius in m, need not be the actual tank radius,

@@ -425,9 +425,10 @@ void BelugaTrackerFrame::doIPCExchange()
         r &= m_IPCClient.getControls(robots, &mode, &X, &Y, &Z);
 		
 		// set timing parameter for HITLControlLaw (m_dTiming) from IPC
+		double timing = 0;
 		std::string params("");
 		r &= m_IPCClient.getParams(&params);
-		double timing = parseParamString(params);
+		sscanf(params.c_str(), "%f", &timing);
 		for(unsigned int i = 0; i < 4; i++)
 		{
 			m_apHITLController[i]->m_dTiming = timing;
