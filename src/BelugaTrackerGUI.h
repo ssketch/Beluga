@@ -33,8 +33,7 @@ class BelugaTrackerFrame : public MT_RobotFrameBase
 protected:
     BelugaTracker* m_pBelugaTracker;
 
-	double m_dGotoDist;
-	double m_dGotoMaxSpeed;
+	double m_dGotoDistThreshold;
 	double m_dGotoTurningGain;
 
     int m_iNToTrack;
@@ -85,7 +84,6 @@ protected:
 
     mt_Controller m_Controller;
     BelugaWaypointControlLaw* m_apWaypointController[4];
-	BelugaHITLControlLaw* m_apHITLController[4];
 	BelugaBoundaryControlLaw* m_apBoundaryController[4];
     BelugaLowLevelControlLaw* m_apLowLevelController[4];
     void initController();

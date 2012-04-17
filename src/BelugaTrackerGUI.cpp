@@ -35,8 +35,7 @@ BelugaTrackerFrame::BelugaTrackerFrame(wxFrame* parent,
                                long style)
   : MT_RobotFrameBase(parent, id, title, pos, size, style),
     m_iNToTrack(2),
-	m_dGotoDist(50.0),
-	m_dGotoMaxSpeed(15.0),
+	m_dGotoDistThreshold(50.0),
 	m_dGotoTurningGain(25.0),
 	m_bControlActive(false),
 	m_iGrabbedTrackedObj(NO_ROBOT),
@@ -51,6 +50,7 @@ BelugaTrackerFrame::BelugaTrackerFrame(wxFrame* parent,
 	{
         m_pSlaves[i] = NULL;
         m_apWaypointController[i] = NULL;
+		m_apBoundaryController[i] = NULL;
         m_apLowLevelController[i] = NULL;
 
         for(unsigned int j = 0; j < 4; j++)
@@ -70,6 +70,11 @@ BelugaTrackerFrame::~BelugaTrackerFrame()
         {
             delete m_apWaypointController[i];
             m_apWaypointController[i] = NULL;
+        }
+		if(m_apBoundaryController[i])
+        {
+            delete m_apBoundaryController[i];
+            m_apBoundaryController[i] = NULL;
         }
         if(m_apLowLevelController[i])
         {
@@ -117,11 +122,7 @@ void BelugaTrackerFrame::initUserData()
                               wxCMD_LINE_VAL_NUMBER);
 
 	m_pPreferences->AddDouble("Goto Cutoff Distance",
-                              &m_dGotoDist,
-                              MT_DATA_READWRITE,
-                              0);
-	m_pPreferences->AddDouble("Goto Max Speed",
-                              &m_dGotoMaxSpeed,
+                              &m_dGotoDistThreshold,
                               MT_DATA_READWRITE,
                               0);
 	m_pPreferences->AddDouble("Goto Turning Gain",
@@ -233,11 +234,9 @@ void BelugaTrackerFrame::initController()
     for(unsigned int i = 0; i < 4; i++)
     {
         m_apWaypointController[i] = new BelugaWaypointControlLaw();
-		m_apHITLController[i] = new BelugaHITLControlLaw();
         m_apBoundaryController[i] = new BelugaBoundaryControlLaw();
 		m_apLowLevelController[i] = new BelugaLowLevelControlLaw();
         m_Controller.appendControlLawToBot(i, m_apWaypointController[i], mt_CONTROLLER_NO_GC);
-        m_Controller.appendControlLawToBot(i, m_apHITLController[i], mt_CONTROLLER_NO_GC);
 		m_Controller.appendControlLawToBot(i, m_apBoundaryController[i], mt_CONTROLLER_NO_GC);
 		m_Controller.appendControlLawToBot(i, m_apLowLevelController[i], mt_CONTROLLER_NO_GC);
 
@@ -424,14 +423,14 @@ void BelugaTrackerFrame::doIPCExchange()
         bool r = m_IPCClient.setAllPositions(&X, &Y, &Z);
         r &= m_IPCClient.getControls(robots, &mode, &X, &Y, &Z);
 		
-		// set timing parameter for HITLControlLaw (m_dTiming) from IPC
+		// set timing parameter for WaypointControlLaw (m_dTiming) from IPC
 		double timing = 0;
 		std::string params("");
 		r &= m_IPCClient.getParams(&params);
 		sscanf(params.c_str(), "%f", &timing);
 		for(unsigned int i = 0; i < 4; i++)
 		{
-			m_apHITLController[i]->m_dTiming = timing;
+			m_apWaypointController[i]->m_dTiming = timing;
 		}
 		
         if(!r)
@@ -552,8 +551,7 @@ void BelugaTrackerFrame::doUserControl()
     mt_dVectorCollection_t u_in_all(4);
     for(int i = 0; i < m_iNToTrack; i++)
     {
-		m_apWaypointController[i]->m_dDist = m_dGotoDist;
-		m_apWaypointController[i]->m_dMaxSpeed = m_dGotoMaxSpeed;
+		m_apWaypointController[i]->m_dDistThreshold = m_dGotoDistThreshold;
 		m_apWaypointController[i]->m_dTurningGain = m_dGotoTurningGain;
 
         if(m_Robots.IsPhysical(i) && m_Robots.TrackingIndex[i] != MT_NOT_TRACKED)
@@ -943,7 +941,7 @@ void BelugaTrackerFrame::doCommonGLDrawing(int slave_index)
 		{
 			MT_DrawCircle(m_adGotoXC[i][slave_index],
 				h - m_adGotoYC[i][slave_index],
-				MT_Green, 15.0*m_dGotoDist);
+				MT_Green, 15.0*m_dGotoDistThreshold);
 		}
 	}
 	glLineWidth(1.0);
