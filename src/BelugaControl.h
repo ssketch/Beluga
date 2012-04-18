@@ -49,12 +49,19 @@ public:
                            const mt_dVector_t& u_in);
 	
     bool doActivate(bool value = true){m_bActive = value;  return m_bActive;};
-    
-	double m_dFcr;
+	
+	const double m_dFcr;
     
 protected:
     bool m_bActive;
     
+	const double step(0.05);
+	const unsigned int size_R((DEFAULT_TANK_RADIUS/step) + 1);
+	const unsigned int size_TH((PI/step) + 1);
+	const double R[size_R];
+	const double TH[size_TH];
+	const double C[size_R][size_TH];
+	
     static std::string s_sName;
 };
 

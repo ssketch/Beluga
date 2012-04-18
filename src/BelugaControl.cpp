@@ -207,6 +207,32 @@ BelugaBoundaryControlLaw::BelugaBoundaryControlLaw()
 	  m_bActive(true),
 	  m_dFcr(5.0e-3)    // repulsive force constant (adjust to fit boundaries)
 {
+	/* map tank at depth z */
+	for (unsigned int n = 0; n < size_R; n++)
+	{
+		R[n] = n*step;
+	}
+	for (unsigned int n = 0; n < size_TH; n++)
+	{
+		TH[n] = n*step;
+	}
+	
+	/* create certainty matrix for tank */
+	double boundary_length = DEFAULT_TANK_RADIUS/sqrt((double) 2.0);
+	for (unsigned int n = 0; n < size_R; n++)
+	{
+		for (unsigned int m = 0; m < size_TH; m++)
+		{
+			/* calculate (x,y) from (R,TH) */
+			double cx = R[n]*cos(TH[m]);
+			double cy = R[n]*sin(TH[m]);
+			/* is (x,y) outside of inscribed-square boundaries? */
+			if (fabs(cx) > boundary_length || fabs(cy) > boundary_length)
+				C[n][m] = m_dFcr;
+			else
+				C[n][m] = 0;
+		}
+	}
 }
 
 mt_dVector_t BelugaBoundaryControlLaw::doControl(const mt_dVector_t& state,
@@ -226,39 +252,6 @@ mt_dVector_t BelugaBoundaryControlLaw::doControl(const mt_dVector_t& state,
 	double u_speed = u_in[BELUGA_CONTROL_FWD_SPEED];
     double u_vert = u_in[BELUGA_CONTROL_VERT_SPEED];
     double u_turn = u_in[BELUGA_CONTROL_STEERING];
-	
-    /* map tank at depth z */
-	double step = 0.05;
-	const double size_R = (DEFAULT_TANK_RADIUS/step) + 1;
-	const double size_TH = (PI/step) + 1;
-	double R[size_R];
-	for (unsigned int n = 0; n < size_R; n++)
-	{
-		R[n] = n*step;
-	}
-	double TH[size_TH];
-	for (unsigned int n = 0; n < size_TH; n++)
-	{
-		TH[n] = n*step;
-	}
-	
-	/* create certainty matrix for tank */
-	double boundary_length = DEFAULT_TANK_RADIUS/sqrt((double) 2.0);
-	double C[size_R][size_TH];
-	for (unsigned int n = 0; n < size_R; n++)
-	{
-		for (unsigned int m = 0; m < size_TH; m++)
-		{
-			/* calculate (x,y) from (R,TH) */
-			double cx = R[n]*cos(TH[m]);
-			double cy = R[n]*sin(TH[m]);
-			/* is (x,y) outside of inscribed-square boundaries? */
-			if (fabs(cx) > boundary_length || fabs(cy) > boundary_length)
-				C[n][m] = m_dFcr;
-			else
-				C[n][m] = 0;
-		}
-	}
 	
 	/* initialize net repulsive force (components in x and y) on the robot */
 	double fx = 0;
