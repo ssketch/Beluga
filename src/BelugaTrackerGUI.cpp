@@ -423,14 +423,16 @@ void BelugaTrackerFrame::doIPCExchange()
         bool r = m_IPCClient.setAllPositions(&X, &Y, &Z);
         r &= m_IPCClient.getControls(robots, &mode, &X, &Y, &Z);
 		
-		// set timing parameter for WaypointControlLaw (m_dTiming) from IPC
+		// set timing and maxSpeed parameters for WaypointControlLaw (m_dTiming & m_dMaxSpeed) from IPC
 		double timing = 0;
 		std::string params("");
 		r &= m_IPCClient.getParams(&params);
 		sscanf(params.c_str(), "%f", &timing);
+		double maxSpeed = 1.5*((2*DEFAULT_TANK_RADIUS)/timing)*1000;
 		for(unsigned int i = 0; i < 4; i++)
 		{
 			m_apWaypointController[i]->m_dTiming = timing;
+			m_apWaypointController[i]->m_dMaxSpeed = maxSpeed;
 		}
 		
         if(!r)

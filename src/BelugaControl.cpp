@@ -27,10 +27,11 @@ BelugaBoundaryControlLaw* belugaBoundaryControlLawFactory(unsigned int bot_num,
 
 BelugaWaypointControlLaw::BelugaWaypointControlLaw()  // includes HITL timing control (instead of having a separate ControlLaw)
     : mt_ControlLaw(3 /* # control inputs */,
-                    3 /* # parameters */),
+                    4 /* # parameters */),
       m_bActive(false),
-      m_dTiming(7500),		  // time for robot to travel between waypoints (msec), set in js
-      m_dDistThreshold(0.5),  // distance from waypoint at which robot starts to decrease speed from max (m)
+      m_dTiming(7500),	      // time for robot to travel between waypoints (msec), set in js and updated during IPC exchange
+      m_dMaxSpeed(1.28),      // speed robot travels when more than 'm_dDistThreshold' away from waypoint (m/s), updated during IPC exchange
+	  m_dDistThreshold(0.5),  // distance from waypoint at which robot starts to decrease speed from max (m)
       m_dTurningGain(10.0)
 {
 }
@@ -83,14 +84,13 @@ mt_dVector_t BelugaWaypointControlLaw::doControl(const mt_dVector_t& state,
     }
     else
     {
-        double maxSpeed = 1.5*((2*DEFAULT_TANK_RADIUS)/m_dTiming)*1000;  // can play with 1.5 if not Beluga is slow or fast
 		if (d > m_dDistThreshold)
         {
-            u_speed = maxSpeed;
+            u_speed = m_dMaxSpeed;
         }
         else
         {
-            u_speed = maxSpeed*(d/m_dDistThreshold)*fabs(cos(dth));
+            u_speed = m_dMaxSpeed*(d/m_dDistThreshold)*fabs(cos(dth));
         }
         u_turn = -m_dTurningGain*sin(dth);
 		if (dth > 1.57)
@@ -203,7 +203,7 @@ mt_dVector_t BelugaLowLevelControlLaw::doControl(const mt_dVector_t& state,
 
 BelugaBoundaryControlLaw::BelugaBoundaryControlLaw()
 	: mt_ControlLaw(3 /* # control inputs */,
-					1 /* # parameters */),
+					7 /* # parameters */),
 	  m_bActive(true)
 {
 	/* map tank at depth z */

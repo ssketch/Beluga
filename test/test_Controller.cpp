@@ -24,7 +24,7 @@ int testBelugaWaypointControlLaw()
     u_in[BELUGA_WAYPOINT_X] = state[BELUGA_STATE_X];
     u_in[BELUGA_WAYPOINT_Y] = state[BELUGA_STATE_Y] + 1.1*control_law.m_dDistThreshold;
     u_out = control_law.doControl(state, u_in);
-    if(!eq_wf(u_out[BELUGA_CONTROL_FWD_SPEED], 1.5))
+    if(!eq_wf(u_out[BELUGA_CONTROL_FWD_SPEED], control_law.m_dMaxSpeed))
         RETURN_ERROR_ELSE_OK("Control did not saturate, was " << u_out[BELUGA_CONTROL_FWD_SPEED]);
 	
     return OK;

@@ -15,6 +15,7 @@ public:
     bool doActivate(bool value = true){m_bActive = value;  return m_bActive;};
     
 	double m_dTiming;
+	double m_dMaxSpeed;
 	double m_dDistThreshold;
     double m_dTurningGain;
     
