@@ -204,8 +204,7 @@ mt_dVector_t BelugaLowLevelControlLaw::doControl(const mt_dVector_t& state,
 BelugaBoundaryControlLaw::BelugaBoundaryControlLaw()
 	: mt_ControlLaw(3 /* # control inputs */,
 					1 /* # parameters */),
-	  m_bActive(true),
-	  m_dFcr(5.0e-3)    // repulsive force constant (adjust to fit boundaries)
+	  m_bActive(true)
 {
 	/* map tank at depth z */
 	for (unsigned int n = 0; n < size_R; n++)
@@ -228,7 +227,7 @@ BelugaBoundaryControlLaw::BelugaBoundaryControlLaw()
 			double cy = R[n]*sin(TH[m]);
 			/* is (x,y) outside of inscribed-square boundaries? */
 			if (fabs(cx) > boundary_length || fabs(cy) > boundary_length)
-				C[n][m] = m_dFcr;
+				C[n][m] = Fcr;
 			else
 				C[n][m] = 0;
 		}
