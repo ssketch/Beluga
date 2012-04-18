@@ -229,8 +229,8 @@ mt_dVector_t BelugaBoundaryControlLaw::doControl(const mt_dVector_t& state,
 	
     /* map tank at depth z */
 	double step = 0.05;
-	double size_R = (DEFAULT_TANK_RADIUS/step) + 1;
-	double size_TH = (PI/step) + 1;
+	const double size_R = (DEFAULT_TANK_RADIUS/step) + 1;
+	const double size_TH = (PI/step) + 1;
 	double R[size_R];
 	for (unsigned int n = 0; n < size_R; n++)
 	{
@@ -243,6 +243,7 @@ mt_dVector_t BelugaBoundaryControlLaw::doControl(const mt_dVector_t& state,
 	}
 	
 	/* create certainty matrix for tank */
+	double boundary_length = DEFAULT_TANK_RADIUS/sqrt((double) 2.0);
 	double C[size_R][size_TH];
 	for (unsigned int n = 0; n < size_R; n++)
 	{
@@ -252,7 +253,7 @@ mt_dVector_t BelugaBoundaryControlLaw::doControl(const mt_dVector_t& state,
 			double cx = R[n]*cos(TH[m]);
 			double cy = R[n]*sin(TH[m]);
 			/* is (x,y) outside of inscribed-square boundaries? */
-			if (fabs(cx) > DEFAULT_TANK_RADIUS/sqrt(2) || fabs(cy) > DEFAULT_TANK_RADIUS/sqrt(2))
+			if (fabs(cx) > boundary_length || fabs(cy) > boundary_length)
 				C[n][m] = m_dFcr;
 			else
 				C[n][m] = 0;
