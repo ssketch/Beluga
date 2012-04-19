@@ -227,7 +227,13 @@ BelugaBoundaryControlLaw::BelugaBoundaryControlLaw()
 			double cy = R[n]*sin(TH[m]);
 			/* is (x,y) outside of inscribed-square boundaries? */
 			if (fabs(cx) > boundary_length || fabs(cy) > boundary_length)
-				C[n][m] = Fcr;
+			{
+				/* soften boundaries */
+				if (fabs(cx) < boundary_length)
+					C[n][m] = Fcr*(fabs(cy)/DEFAULT_TANK_RADIUS);
+				else
+					C[n][m] = Fcr*(fabs(cx)/DEFAULT_TANK_RADIUS);
+			}
 			else
 				C[n][m] = 0;
 		}

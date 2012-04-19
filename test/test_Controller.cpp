@@ -27,6 +27,15 @@ int testBelugaWaypointControlLaw()
     if(!eq_wf(u_out[BELUGA_CONTROL_FWD_SPEED], control_law.m_dMaxSpeed))
         RETURN_ERROR_ELSE_OK("Control did not saturate, was " << u_out[BELUGA_CONTROL_FWD_SPEED]);
 	
+	/* forward speed should decrease as robot approaches waypoint */
+	START_TEST("Checking that the speed decreases as robot nears waypoint");
+    u_in[BELUGA_WAYPOINT_X] = state[BELUGA_STATE_X];
+    for (
+	u_in[BELUGA_WAYPOINT_Y] = state[BELUGA_STATE_Y] + dist*control_law.m_dDistThreshold;
+    u_out = control_law.doControl(state, u_in);
+    if(!eq_wf(u_out[BELUGA_CONTROL_FWD_SPEED], control_law.m_dMaxSpeed))
+        RETURN_ERROR_ELSE_OK("Control did not saturate, was " << u_out[BELUGA_CONTROL_FWD_SPEED]);
+	
     return OK;
 }
 
@@ -76,7 +85,20 @@ int testBelugaBoundaryControlLaw()
     if(u_out.size() != BELUGA_CONTROL_SIZE)
         RETURN_ERROR_ELSE_OK("Incorrect size " << u_out.size());
 	
-	/*  */
+	/* check entries in the certainty matrix C */
+	START_TEST("Checking certainty matrix");
+	
+	/* robot speed should decrease in x the closer it gets to the +x boundary */
+	START_TEST("Checking +x boundary");
+	
+	/* robot speed should increase in x the closer it gets to the -x boundary */
+	START_TEST("Checking -x boundary");
+	
+	/* robot speed should decrease in y the closer it gets to the +y boundary */
+	START_TEST("Checking +y boundary");
+	
+	/* robot speed should increase in y the closer it gets to the -y boundary */
+	START_TEST("Checking -y boundary");
 	
     return OK;
 }
