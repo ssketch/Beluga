@@ -6,6 +6,9 @@ std::string BelugaWaypointControlLaw::s_sName("Beluga Waypoint Controller\n");
 std::string BelugaLowLevelControlLaw::s_sName("Beluga Low Level Controller\n");
 std::string BelugaBoundaryControlLaw::s_sName("Beluga Boundary Controller\n");
 
+const double BelugaBoundaryControlLaw::Fcr = 5.0e-3;
+const double BelugaBoundaryControlLaw::step = 0.05;
+
 BelugaWaypointControlLaw* belugaWaypointControlLawFactory(unsigned int bot_num,
                                                           unsigned int law_num)
 {
