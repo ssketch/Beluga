@@ -35,6 +35,7 @@ protected:
 
 	double m_dGotoDistThreshold;
 	double m_dGotoTurningGain;
+	double m_dBoundaryGain;
 
     int m_iNToTrack;
 	int m_iGrabbedTrackedObj;

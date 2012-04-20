@@ -50,14 +50,15 @@ public:
                            const mt_dVector_t& u_in);
 	
     bool doActivate(bool value = true){m_bActive = value;  return m_bActive;};
-    
+
+	double m_dGain;// = 5.0e-3;		 // must be calibrated for robots in tank
+
 protected:
     bool m_bActive;
     
-	static const double Fcr;// = 5.0e-3;		 // must be calibrated for robots in tank
 	static const double step;// = 0.05;
 	static const unsigned int size_R = 65;   // (DEFAULT_TANK_RADIUS/step) + 1
-	static const unsigned int size_TH = 63;  // (PI/step) + 1, cast as an integer
+	static const unsigned int size_TH = 126;  // (2PI/step) + 1, cast as an integer
 	double R[size_R];
 	double TH[size_TH];
 	double C[size_R][size_TH];

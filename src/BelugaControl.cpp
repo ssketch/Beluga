@@ -6,7 +6,6 @@ std::string BelugaWaypointControlLaw::s_sName("Beluga Waypoint Controller\n");
 std::string BelugaLowLevelControlLaw::s_sName("Beluga Low Level Controller\n");
 std::string BelugaBoundaryControlLaw::s_sName("Beluga Boundary Controller\n");
 
-const double BelugaBoundaryControlLaw::Fcr = 5.0e-3;
 const double BelugaBoundaryControlLaw::step = 0.05;
 
 BelugaWaypointControlLaw* belugaWaypointControlLawFactory(unsigned int bot_num,
@@ -33,7 +32,7 @@ BelugaWaypointControlLaw::BelugaWaypointControlLaw()  // includes HITL timing co
                     4 /* # parameters */),
       m_bActive(false),
       m_dTiming(7500),	      // time for robot to travel between waypoints (msec), set in js and updated during IPC exchange
-      m_dMaxSpeed(1.28),      // speed robot travels when more than 'm_dDistThreshold' away from waypoint (m/s), updated during IPC exchange
+      m_dMaxSpeed(0.75),      // speed robot travels when more than 'm_dDistThreshold' away from waypoint (m/s), updated during IPC exchange
 	  m_dDistThreshold(0.5),  // distance from waypoint at which robot starts to decrease speed from max (m)
       m_dTurningGain(10.0)
 {
@@ -207,6 +206,7 @@ mt_dVector_t BelugaLowLevelControlLaw::doControl(const mt_dVector_t& state,
 BelugaBoundaryControlLaw::BelugaBoundaryControlLaw()
 	: mt_ControlLaw(3 /* # control inputs */,
 					7 /* # parameters */),
+					m_dGain(1e-6),
 	  m_bActive(true)
 {
 	/* map tank at depth z */
@@ -233,9 +233,9 @@ BelugaBoundaryControlLaw::BelugaBoundaryControlLaw()
 			{
 				/* soften boundaries */
 				if (fabs(cx) < boundary_length)
-					C[n][m] = Fcr*(fabs(cy)/DEFAULT_TANK_RADIUS);
+					C[n][m] = ((fabs(cy) - boundary_length)/(DEFAULT_TANK_RADIUS - boundary_length));
 				else
-					C[n][m] = Fcr*(fabs(cx)/DEFAULT_TANK_RADIUS);
+					C[n][m] = ((fabs(cx) - boundary_length)/(DEFAULT_TANK_RADIUS - boundary_length));
 			}
 			else
 				C[n][m] = 0;
@@ -261,6 +261,10 @@ mt_dVector_t BelugaBoundaryControlLaw::doControl(const mt_dVector_t& state,
     double u_vert = u_in[BELUGA_CONTROL_VERT_SPEED];
     double u_turn = u_in[BELUGA_CONTROL_STEERING];
 	
+	printf("Waypoint control in: speed = %f, vert = %f, turn = %f\n", u_speed, u_vert, u_turn);
+
+	printf("Position: %f, %f\n", x, y);
+
 	/* initialize net repulsive force (components in x and y) on the robot */
 	double fx = 0;
 	double fy = 0;
@@ -280,13 +284,20 @@ mt_dVector_t BelugaBoundaryControlLaw::doControl(const mt_dVector_t& state,
 			{
 				fx += C[n][m]*(cx - x)/(d*d);
 				fy += C[n][m]*(cy - y)/(d*d);
+				if(d < 0.1)
+				{
+					printf("C = %f, cx - x = %f, cy - y = %f, d = %f, fx = %f, fy = %f\n",
+						C[n][m], cx-x, cy-y, d, fx, fy);
+				}
 			}
 		}
 	}
+
+	printf("Forces: %f, %f\n", fx, fy);
 	
 	/* calculate control parameters */
-	double ax = fx/m_eff;
-	double ay = fy/m_eff;
+	double ax = m_dGain*fx/m_eff;
+	double ay = m_dGain*fy/m_eff;
 	double dt = BELUGA_MIN_COMMAND_PERIOD_MSEC;
 	double dvx = ax*dt;
 	double dvy = ay*dt;
@@ -295,10 +306,19 @@ mt_dVector_t BelugaBoundaryControlLaw::doControl(const mt_dVector_t& state,
 	double dvr = dvx*cos(th) - dvy*sin(th);
 	double dvth = dvx*sin(th) + dvy*cos(th);
 	
+	printf("Control efforts: speed %f, turning %f\n", dvr, dvth);
+
 	/* add in control parameters */
 	u_speed -= dvr;
 	u_turn -= dvth;
-	
+
+	if(u_speed < 0)
+	{
+		u_speed = 0;
+	}
+
+	printf("Waypoint control out: speed = %f, vert = %f, turn = %f\n", u_speed, u_vert, u_turn);
+
 	u[BELUGA_CONTROL_FWD_SPEED] = u_speed;
     u[BELUGA_CONTROL_VERT_SPEED] = u_vert;
     u[BELUGA_CONTROL_STEERING] = u_turn;

@@ -37,6 +37,7 @@ BelugaTrackerFrame::BelugaTrackerFrame(wxFrame* parent,
     m_iNToTrack(1 /* SET THIS EQUAL TO THE NUMBER OF VEHICLES */),
 	m_dGotoDistThreshold(50.0),
 	m_dGotoTurningGain(25.0),
+	m_dBoundaryGain(1e-6),
 	m_bControlActive(false),
 	m_iGrabbedTrackedObj(NO_ROBOT),
 	m_bGotoActive(false),
@@ -127,6 +128,8 @@ void BelugaTrackerFrame::initUserData()
                               0);
 	m_pPreferences->AddDouble("Goto Turning Gain",
                               &m_dGotoTurningGain);
+	m_pPreferences->AddDouble("Boundary Gain",
+		&m_dBoundaryGain);
 
     std::vector<std::string> botnames;
     for(unsigned int i = 0; i < 7; i++)
@@ -555,6 +558,7 @@ void BelugaTrackerFrame::doUserControl()
     {
 		m_apWaypointController[i]->m_dDistThreshold = m_dGotoDistThreshold;
 		m_apWaypointController[i]->m_dTurningGain = m_dGotoTurningGain;
+		m_apBoundaryController[i]->m_dGain = m_dBoundaryGain;
 
         if(m_Robots.IsPhysical(i) && m_Robots.TrackingIndex[i] != MT_NOT_TRACKED)
         {
