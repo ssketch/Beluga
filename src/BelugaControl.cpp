@@ -293,8 +293,8 @@ mt_dVector_t BelugaBoundaryControlLaw::doControl(const mt_dVector_t& state,
 	double dvth = dvx*sin(th) + dvy*cos(th);
 	
 	/* add in control parameters */
-	u_speed = u_speed + dvr;
-	u_turn = u_turn + dvth;
+	u_speed -= dvr;
+	u_turn -= dvth;
 	
 	u[BELUGA_CONTROL_FWD_SPEED] = u_speed;
     u[BELUGA_CONTROL_VERT_SPEED] = u_vert;
