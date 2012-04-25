@@ -5,5 +5,5 @@ cgi/is_*
 cgi/positions_*
 tmp_*
 test/*.dat
-
-src/BelugaRobot.cpp
+.DS_Store
+test/*.o
