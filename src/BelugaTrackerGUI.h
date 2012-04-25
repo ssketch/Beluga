@@ -33,6 +33,7 @@ class BelugaTrackerFrame : public MT_RobotFrameBase
 protected:
     BelugaTracker* m_pBelugaTracker;
 
+	double m_dGotoMaxSpeed;
 	double m_dGotoDistThreshold;
 	double m_dGotoTurningGain;
 	double m_dBoundaryGain;

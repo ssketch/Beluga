@@ -51,17 +51,14 @@ public:
 	
     bool doActivate(bool value = true){m_bActive = value;  return m_bActive;};
 
-	double m_dGain;// = 5.0e-3;		 // must be calibrated for robots in tank
+	double m_dGain;
 
 protected:
     bool m_bActive;
-    
-	static const double step;// = 0.05;
-	static const unsigned int size_R = 65;   // (DEFAULT_TANK_RADIUS/step) + 1
-	static const unsigned int size_TH = 126;  // (2PI/step) + 1, cast as an integer
-	double R[size_R];
-	double TH[size_TH];
-	double C[size_R][size_TH];
+	
+	static const unsigned int n = 20;  // from MATLAB gridding_window.m code
+	double FX[2*n+1][2*n+1];
+	double FY[2*n+1][2*n+1];
 	
     static std::string s_sName;
 };

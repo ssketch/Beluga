@@ -35,6 +35,7 @@ BelugaTrackerFrame::BelugaTrackerFrame(wxFrame* parent,
                                long style)
   : MT_RobotFrameBase(parent, id, title, pos, size, style),
     m_iNToTrack(1 /* SET THIS EQUAL TO THE NUMBER OF VEHICLES */),
+	m_dGotoMaxSpeed(15.0),	
 	m_dGotoDistThreshold(50.0),
 	m_dGotoTurningGain(25.0),
 	m_dBoundaryGain(1e-6),
@@ -122,6 +123,10 @@ void BelugaTrackerFrame::initUserData()
                               wxT("Number of objects to track. Default is 3."),
                               wxCMD_LINE_VAL_NUMBER);
 
+	m_pPreferences->AddDouble("Goto Max Speed",
+                              &m_dGotoMaxSpeed,
+                              MT_DATA_READWRITE,
+                              0);
 	m_pPreferences->AddDouble("Goto Cutoff Distance",
                               &m_dGotoDistThreshold,
                               MT_DATA_READWRITE,
@@ -129,7 +134,7 @@ void BelugaTrackerFrame::initUserData()
 	m_pPreferences->AddDouble("Goto Turning Gain",
                               &m_dGotoTurningGain);
 	m_pPreferences->AddDouble("Boundary Gain",
-		&m_dBoundaryGain);
+							  &m_dBoundaryGain);
 
     std::vector<std::string> botnames;
     for(unsigned int i = 0; i < 7; i++)
@@ -556,6 +561,7 @@ void BelugaTrackerFrame::doUserControl()
     mt_dVectorCollection_t u_in_all(4);
     for(int i = 0; i < m_iNToTrack; i++)
     {
+		m_apWaypointController[i]->m_dMaxSpeed = m_dGotoMaxSpeed;
 		m_apWaypointController[i]->m_dDistThreshold = m_dGotoDistThreshold;
 		m_apWaypointController[i]->m_dTurningGain = m_dGotoTurningGain;
 		m_apBoundaryController[i]->m_dGain = m_dBoundaryGain;

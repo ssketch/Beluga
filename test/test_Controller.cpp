@@ -1,8 +1,7 @@
-#include "BelugaTest.h"
-
-#include "BelugaControl.h"
-
 #include <math.h>
+
+#include "BelugaTest.h"
+#include "BelugaControl.h"
 
 int testBelugaWaypointControlLaw()
 {
@@ -94,16 +93,37 @@ int testBelugaBoundaryControlLaw()
     if (u_out.size() != BELUGA_CONTROL_SIZE)
         RETURN_ERROR_ELSE_OK("Incorrect size " << u_out.size());
 	
-	/* check robot's response to boundaries in x and y */
+	/* robot speed should not change at origin */
+	START_TEST("Checking origin");
+	state[BELUGA_STATE_X] = 0.0;
+	state[BELUGA_STATE_Y] = 0.0;
+	double u_speed = u_in[BELUGA_CONTROL_FWD_SPEED];
+    double u_vert = u_in[BELUGA_CONTROL_VERT_SPEED];
+    double u_turn = u_in[BELUGA_CONTROL_STEERING];
+	u_out = control_law.doControl(state, u_in);
+	double d_speed = fabs(u_speed - u_out[BELUGA_CONTROL_FWD_SPEED]);
+	double d_vert = fabs(u_vert - u_out[BELUGA_CONTROL_VERT_SPEED]);
+	double d_turn = fabs(u_turn - u_out[BELUGA_CONTROL_STEERING]);
+	if (!eq_wf(d_speed, 0.0))
+		RETURN_ERROR_ELSE_OK("Forward speed not zero, was " << u_out[BELUGA_CONTROL_FWD_SPEED]);
+	if (!eq_wf(d_vert, 0.0))
+		RETURN_ERROR_ELSE_OK("Vertical speed not zero, was " << u_out[BELUGA_CONTROL_VERT_SPEED]);
+	if (!eq_wf(d_turn, 0.0))
+		RETURN_ERROR_ELSE_OK("Steering not zero, was " << u_out[BELUGA_CONTROL_STEERING]);
+	
+	/* check robot's response to boundaries in x and y, along the respective axes */
 	double minDist = 0.5;
 	double step = 0.1;
 	
-	/* robot speed should decrease in x the closer it gets to the +x boundary */
+	/* robot speed should decrease in x and not change in y the closer it gets to the +x boundary */
 	START_TEST("Checking +x boundary");
 	state[BELUGA_STATE_Y] = 0.0;
 	state[BELUGA_STATE_THETA] = 0.0;
 	double th = state[BELUGA_STATE_THETA];
-	double prev_vx = 500.0;
+	u_speed = u_in[BELUGA_CONTROL_FWD_SPEED];
+    u_turn = u_in[BELUGA_CONTROL_STEERING];
+	double prev_vx = u_speed*cos(th) + u_turn*sin(th);
+	double prev_vy = -u_speed*sin(th) + u_turn*cos(th);
 	double dist = minDist;
 	while (dist < DEFAULT_TANK_RADIUS/sqrt((double) 2.0))
 	{
@@ -112,18 +132,26 @@ int testBelugaBoundaryControlLaw()
 		double vr = u_out[BELUGA_CONTROL_FWD_SPEED];
 		double vth = u_out[BELUGA_CONTROL_STEERING];
 		double vx = vr*cos(th) + vth*sin(th);
+		double vy = -vr*sin(th) + vth*cos(th);
 		if (vx > prev_vx)
 			RETURN_ERROR_ELSE_OK("Speed did not decrease in x, was " << vx);
+		double dvy = fabs(vy - prev_vy);
+		if (!eq_wf(dvy, 0.0))
+			RETURN_ERROR_ELSE_OK("Y-speed changed, d_vy was " << dvy);
 		prev_vx = vx;
+		prev_vy = vy;
 		dist += step;
 	}
 	
-	/* robot speed should increase in x the closer it gets to the -x boundary */
+	/* robot speed should increase in x and not change in y the closer it gets to the -x boundary */
 	START_TEST("Checking -x boundary");
 	state[BELUGA_STATE_Y] = 0.0;
 	state[BELUGA_STATE_THETA] = PI;
 	th = state[BELUGA_STATE_THETA];
-	prev_vx = -500.0;
+	u_speed = u_in[BELUGA_CONTROL_FWD_SPEED];
+    u_turn = u_in[BELUGA_CONTROL_STEERING];
+	prev_vx = u_speed*cos(th) + u_turn*sin(th);
+	prev_vy = -u_speed*sin(th) + u_turn*cos(th);
 	dist = -minDist;
 	while (dist > -DEFAULT_TANK_RADIUS/sqrt((double) 2.0))
 	{
@@ -132,18 +160,26 @@ int testBelugaBoundaryControlLaw()
 		double vr = u_out[BELUGA_CONTROL_FWD_SPEED];
 		double vth = u_out[BELUGA_CONTROL_STEERING];
 		double vx = vr*cos(th) + vth*sin(th);
+		double vy = -vr*sin(th) + vth*cos(th);
 		if (vx < prev_vx)
 			RETURN_ERROR_ELSE_OK("Speed did not increase in x, was " << vx);
+		double dvy = fabs(vy - prev_vy);
+		if (!eq_wf(dvy, 0.0))
+			RETURN_ERROR_ELSE_OK("Y-speed changed, d_vy was " << dvy);
 		prev_vx = vx;
+		prev_vy = vy;
 		dist -= step;
 	}
 	
-	/* robot speed should decrease in y the closer it gets to the +y boundary */
+	/* robot speed should decrease in y and not change in x the closer it gets to the +y boundary */
 	START_TEST("Checking +y boundary");
 	state[BELUGA_STATE_X] = 0.0;
 	state[BELUGA_STATE_THETA] = PI/2;
 	th = state[BELUGA_STATE_THETA];
-	double prev_vy = 500.0;
+	u_speed = u_in[BELUGA_CONTROL_FWD_SPEED];
+    u_turn = u_in[BELUGA_CONTROL_STEERING];
+	prev_vx = u_speed*cos(th) + u_turn*sin(th);
+	prev_vy = -u_speed*sin(th) + u_turn*cos(th);
 	dist = minDist;
 	while (dist < DEFAULT_TANK_RADIUS/sqrt((double) 2.0))
 	{
@@ -151,19 +187,27 @@ int testBelugaBoundaryControlLaw()
 		u_out = control_law.doControl(state, u_in);
 		double vr = u_out[BELUGA_CONTROL_FWD_SPEED];
 		double vth = u_out[BELUGA_CONTROL_STEERING];
+		double vx = vr*cos(th) + vth*sin(th);
 		double vy = -vr*sin(th) + vth*cos(th);
 		if (vy > prev_vy)
 			RETURN_ERROR_ELSE_OK("Speed did not decrease in y, was " << vy);
+		double dvx = fabs(vx - prev_vx);
+		if (!eq_wf(dvx, 0.0))
+			RETURN_ERROR_ELSE_OK("X-speed changed, d_vy was " << dvx);
+		prev_vx = vx;
 		prev_vy = vy;
 		dist += step;
 	}
 	
-	/* robot speed should increase in y the closer it gets to the -y boundary */
+	/* robot speed should increase in y and not change in x the closer it gets to the -y boundary */
 	START_TEST("Checking -y boundary");
 	state[BELUGA_STATE_X] = 0.0;
 	state[BELUGA_STATE_THETA] = (3/2)*PI;
 	th = state[BELUGA_STATE_THETA];
-	prev_vy = -500.0;
+	u_speed = u_in[BELUGA_CONTROL_FWD_SPEED];
+    u_turn = u_in[BELUGA_CONTROL_STEERING];
+	prev_vx = u_speed*cos(th) + u_turn*sin(th);
+	prev_vy = -u_speed*sin(th) + u_turn*cos(th);
 	dist = -minDist;
 	while (dist > -DEFAULT_TANK_RADIUS/sqrt((double) 2.0))
 	{
@@ -171,9 +215,14 @@ int testBelugaBoundaryControlLaw()
 		u_out = control_law.doControl(state, u_in);
 		double vr = u_out[BELUGA_CONTROL_FWD_SPEED];
 		double vth = u_out[BELUGA_CONTROL_STEERING];
+		double vx = vr*cos(th) + vth*sin(th);
 		double vy = -vr*sin(th) + vth*cos(th);
 		if (vy < prev_vy)
 			RETURN_ERROR_ELSE_OK("Speed did not increase in y, was " << vy);
+		double dvx = fabs(vx - prev_vx);
+		if (!eq_wf(dvx, 0.0))
+			RETURN_ERROR_ELSE_OK("X-speed changed, d_vy was " << dvx);
+		prev_vx = vx;
 		prev_vy = vy;
 		dist -= step;
 	}
