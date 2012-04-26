@@ -215,7 +215,7 @@ BelugaBoundaryControlLaw::BelugaBoundaryControlLaw(const char* force_file_name_x
 	  m_bActive(true),
 	  m_dGain(1e-6)     // must be calibrated for robots in tank
 {
-    if(!loadForceFiles(force_file_name_x, force_file_name_y))
+    if (!loadForceFiles(force_file_name_x, force_file_name_y))
     {
         std::cerr << "BelugaBoundaryControlLaw Error: Unable to load force files.  Controller will be inactive." << std::endl;
         m_bActive = false;
@@ -225,12 +225,13 @@ BelugaBoundaryControlLaw::BelugaBoundaryControlLaw(const char* force_file_name_x
 bool BelugaBoundaryControlLaw::loadForceFiles(const char* force_file_name_x,
                                               const char* force_file_name_y)
 {
-    if(!force_file_name_x)
+    /* check that files are there */
+	if (!force_file_name_x)
     {
         std::cerr << "BelugaBoundaryControlLaw::loadForceFiles Error: No X input file name" << std::endl;
         return false;
     }
-    if(!force_file_name_y)
+    if (!force_file_name_y)
     {
         std::cerr << "BelugaBoundaryControlLaw::loadForceFiles Error: No Y input file name" << std::endl;
         return false;
@@ -241,19 +242,19 @@ bool BelugaBoundaryControlLaw::loadForceFiles(const char* force_file_name_x,
 	std::ifstream forcesY(force_file_name_y);
 
     bool load_ok = true;
-    if(!forcesX || !forcesX.good())
+    if (!forcesX || !forcesX.good())
     {
         std::cerr << "BelugaBoundaryControlLaw::loadForceFiles Error: Could not load X file '" <<
             force_file_name_x << "'" << std::endl;
         load_ok = false;
     }
-    if(!forcesY || !forcesY.good())
+    if (!forcesY || !forcesY.good())
     {
         std::cerr << "BelugaBoundaryControlLaw::loadForceFiles Error: Could not load Y file '" <<
             force_file_name_y << "'" << std::endl;
         load_ok = false;
     }
-    if(!load_ok)
+    if (!load_ok)
     {
         return false;
     }
@@ -276,7 +277,7 @@ bool BelugaBoundaryControlLaw::loadForceFiles(const char* force_file_name_x,
 	forcesY.close();
 
     unsigned int n_expected = (2*N_FORCE_GRID + 1)*(2*N_FORCE_GRID + 1);
-    if(n_loaded < n_expected)
+    if (n_loaded < n_expected)
     {
         std::cerr << "BelugaBoundaryControlLaw::loadForceFiles Error: Only loaded " <<
             n_loaded << " data points.  Expected " << n_expected << std::endl;
@@ -288,7 +289,7 @@ bool BelugaBoundaryControlLaw::loadForceFiles(const char* force_file_name_x,
 
 mt_dVector_t BelugaBoundaryControlLaw::doControl(const mt_dVector_t& state,
                                                  const mt_dVector_t& u_in)
-{	
+{
 	if (!m_bActive || state.size() < BELUGA_NUM_STATES || u_in.size() < BELUGA_CONTROL_SIZE)
     {
         return u_in;

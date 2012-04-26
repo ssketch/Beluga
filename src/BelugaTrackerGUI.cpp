@@ -39,6 +39,8 @@ BelugaTrackerFrame::BelugaTrackerFrame(wxFrame* parent,
 	m_dGotoDistThreshold(50.0),
 	m_dGotoTurningGain(25.0),
 	m_dBoundaryGain(1e-6),
+	force_file_name_x("Boundary_ForcesX.txt");
+	force_file_name_y("Boundary_ForcesY.txt");
 	m_bControlActive(false),
 	m_iGrabbedTrackedObj(NO_ROBOT),
 	m_bGotoActive(false),
@@ -135,6 +137,10 @@ void BelugaTrackerFrame::initUserData()
                               &m_dGotoTurningGain);
 	m_pPreferences->AddDouble("Boundary Gain",
 							  &m_dBoundaryGain);
+	m_pPreferences->AddChar("X-Force File Name",
+							&force_file_name_x);
+	m_pPreferences->AddChar("Y-Force File Name",
+							&force_file_name_y);
 
     std::vector<std::string> botnames;
     for(unsigned int i = 0; i < 7; i++)
@@ -242,7 +248,7 @@ void BelugaTrackerFrame::initController()
     for(unsigned int i = 0; i < 4; i++)
     {
         m_apWaypointController[i] = new BelugaWaypointControlLaw();
-        m_apBoundaryController[i] = new BelugaBoundaryControlLaw();
+        m_apBoundaryController[i] = new BelugaBoundaryControlLaw(force_file_name_x, force_file_name_y);
 		m_apLowLevelController[i] = new BelugaLowLevelControlLaw();
         m_Controller.appendControlLawToBot(i, m_apWaypointController[i], mt_CONTROLLER_NO_GC);
 		m_Controller.appendControlLawToBot(i, m_apBoundaryController[i], mt_CONTROLLER_NO_GC);

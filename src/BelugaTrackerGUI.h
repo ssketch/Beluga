@@ -37,6 +37,8 @@ protected:
 	double m_dGotoDistThreshold;
 	double m_dGotoTurningGain;
 	double m_dBoundaryGain;
+	const char* force_file_name_x;
+	const char* force_file_name_y;
 
     int m_iNToTrack;
 	int m_iGrabbedTrackedObj;

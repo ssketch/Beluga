@@ -50,15 +50,14 @@ public:
                            const mt_dVector_t& u_in);
 	
     bool doActivate(bool value = true){m_bActive = value;  return m_bActive;};
-
-	double m_dGain;
-
     bool loadForceFiles(const char* force_file_name_x, const char* force_file_name_y);
+	
+	double m_dGain;
 
 protected:
     bool m_bActive;
 	
-	static const unsigned int N_FORCE_GRID = 20;  // from MATLAB gridding_window.m code
+	static const unsigned int N_FORCE_GRID = 20;    // from MATLAB gridding_window.m code
 	double FX[2*N_FORCE_GRID+1][2*N_FORCE_GRID+1];
 	double FY[2*N_FORCE_GRID+1][2*N_FORCE_GRID+1];
 	
