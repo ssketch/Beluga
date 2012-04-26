@@ -1,4 +1,5 @@
 #include <math.h>
+#include <iostream>
 #include <fstream>
 #ifndef MT_CLAMP
 #define MT_CLAMP(x, a, b) (((x) > (b)) ? (b) : (((x) < (a)) ? (a) : (x)))
@@ -23,9 +24,11 @@ BelugaLowLevelControlLaw* belugaLowLevelControlLawFactory(unsigned int bot_num,
 }
 
 BelugaBoundaryControlLaw* belugaBoundaryControlLawFactory(unsigned int bot_num,
-                                                          unsigned int law_num)
+                                                          unsigned int law_num,
+                                                          const char* force_file_name_x,
+                                                          const char* force_file_name_y)
 {
-    return new BelugaBoundaryControlLaw();
+    return new BelugaBoundaryControlLaw(force_file_name_x, force_file_name_y);
 }
 
 
@@ -205,30 +208,82 @@ mt_dVector_t BelugaLowLevelControlLaw::doControl(const mt_dVector_t& state,
 	return u;
 }
 
-BelugaBoundaryControlLaw::BelugaBoundaryControlLaw()
+BelugaBoundaryControlLaw::BelugaBoundaryControlLaw(const char* force_file_name_x,
+                                                   const char* force_file_name_y)
 	: mt_ControlLaw(3 /* # control inputs */,
 					1 /* # parameters */),
 	  m_bActive(true),
 	  m_dGain(1e-6)     // must be calibrated for robots in tank
 {
+    if(!loadForceFiles(force_file_name_x, force_file_name_y))
+    {
+        std::cerr << "BelugaBoundaryControlLaw Error: Unable to load force files.  Controller will be inactive." << std::endl;
+        m_bActive = false;
+    }
+}
+
+bool BelugaBoundaryControlLaw::loadForceFiles(const char* force_file_name_x,
+                                              const char* force_file_name_y)
+{
+    if(!force_file_name_x)
+    {
+        std::cerr << "BelugaBoundaryControlLaw::loadForceFiles Error: No X input file name" << std::endl;
+        return false;
+    }
+    if(!force_file_name_y)
+    {
+        std::cerr << "BelugaBoundaryControlLaw::loadForceFiles Error: No Y input file name" << std::endl;
+        return false;
+    }
+    
 	/* read boundary forces from files and store in arrays */
-	std::ifstream forcesX("Boundary_ForcesX.txt");
-	std::ifstream forcesY("Boundary_ForcesY.txt");
-	
-	while (forcesX.good())
-	{
-		for (unsigned int j = 0; j < 2*n+1; j++)
-		{
-			for (unsigned int i = 0; i < 2*n+1; i++)
-			{
-				forcesX >> FX[i][j];
-				forcesY >> FY[i][j];
-			}
-		}
-	}
+	std::ifstream forcesX(force_file_name_x);
+	std::ifstream forcesY(force_file_name_y);
+
+    bool load_ok = true;
+    if(!forcesX || !forcesX.good())
+    {
+        std::cerr << "BelugaBoundaryControlLaw::loadForceFiles Error: Could not load X file '" <<
+            force_file_name_x << "'" << std::endl;
+        load_ok = false;
+    }
+    if(!forcesY || !forcesY.good())
+    {
+        std::cerr << "BelugaBoundaryControlLaw::loadForceFiles Error: Could not load Y file '" <<
+            force_file_name_y << "'" << std::endl;
+        load_ok = false;
+    }
+    if(!load_ok)
+    {
+        return false;
+    }
+
+    double f = 0;
+    unsigned int n_loaded = 0;
+    for (unsigned int j = 0; forcesX.good() && j < 2*N_FORCE_GRID+1; j++)
+    {
+        for (unsigned int i = 0; forcesY.good() && i < 2*N_FORCE_GRID+1; i++)
+        {
+            forcesX >> f;
+            FX[i][j] = f;
+            forcesY >> f;
+            FY[i][j] = f;
+            n_loaded++;
+        }
+    }
 	
 	forcesX.close();
 	forcesY.close();
+
+    unsigned int n_expected = (2*N_FORCE_GRID + 1)*(2*N_FORCE_GRID + 1);
+    if(n_loaded < n_expected)
+    {
+        std::cerr << "BelugaBoundaryControlLaw::loadForceFiles Error: Only loaded " <<
+            n_loaded << " data points.  Expected " << n_expected << std::endl;
+        return false;
+    }
+
+    return true;
 }
 
 mt_dVector_t BelugaBoundaryControlLaw::doControl(const mt_dVector_t& state,
@@ -255,9 +310,9 @@ mt_dVector_t BelugaBoundaryControlLaw::doControl(const mt_dVector_t& state,
 	
 	/* get boundary force corresponding to grid-point closest to robot */
 	double rmax = 1.3*DEFAULT_TANK_RADIUS;
-	double step = rmax/n;
-	unsigned int i = MT_CLAMP((floor(x/step + 0.5) + n),0,2*n);
-	unsigned int j = MT_CLAMP((floor(y/step + 0.5) + n),0,2*n);
+	double step = rmax/N_FORCE_GRID;
+	unsigned int i = MT_CLAMP((floor(x/step + 0.5) + N_FORCE_GRID),0,2*N_FORCE_GRID);
+	unsigned int j = MT_CLAMP((floor(y/step + 0.5) + N_FORCE_GRID),0,2*N_FORCE_GRID);
 	double fx = FX[i][j];
 	double fy = FY[i][j];
 	

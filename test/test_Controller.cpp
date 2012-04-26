@@ -5,6 +5,7 @@
 
 int testBelugaWaypointControlLaw()
 {
+    
     BelugaWaypointControlLaw control_law;
     control_law.doActivate(true);
 	
@@ -79,7 +80,23 @@ int testBelugaLowLevelControlLaw()
 
 int testBelugaBoundaryControlLaw()
 {
-    BelugaBoundaryControlLaw control_law;
+    const char* bad_file_x = "bad_file.txt";
+    const char* bad_file_y = "bad_file.txt";
+    const char* good_file_x = "../src/Boundary_ForcesX.txt";
+    const char* good_file_y = "../src/Boundary_ForcesY.txt";
+
+    BelugaBoundaryControlLaw control_law(good_file_x, good_file_y);
+
+    /* should fail to load bad files */
+    DO_TEST("Checking for failure on loading bad files (x)",
+            control_law.loadForceFiles(bad_file_x, good_file_y),
+            "Didn't return false for " << bad_file_x);
+    DO_TEST("Checking for failure on loading bad files (y)",
+            control_law.loadForceFiles(good_file_x, bad_file_y),
+            "Didn't return false for " << bad_file_y);
+    DO_TEST("Checking for success on loading good files",
+            !control_law.loadForceFiles(good_file_x, good_file_y),
+            "Unable to load files " << good_file_x << " and " << good_file_y);
 	
     std::string err_msg;
 	
