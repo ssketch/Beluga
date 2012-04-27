@@ -39,8 +39,8 @@ BelugaTrackerFrame::BelugaTrackerFrame(wxFrame* parent,
 	m_dGotoDistThreshold(50.0),
 	m_dGotoTurningGain(25.0),
 	m_dBoundaryGain(1e-6),
-	force_file_name_x("Boundary_ForcesX.txt");
-	force_file_name_y("Boundary_ForcesY.txt");
+/*	m_sForceFileNameX("../../src/Boundary_ForcesX.txt"),
+	m_sForceFileNameY("../../src/Boundary_ForcesY.txt"), */
 	m_bControlActive(false),
 	m_iGrabbedTrackedObj(NO_ROBOT),
 	m_bGotoActive(false),
@@ -137,10 +137,10 @@ void BelugaTrackerFrame::initUserData()
                               &m_dGotoTurningGain);
 	m_pPreferences->AddDouble("Boundary Gain",
 							  &m_dBoundaryGain);
-	m_pPreferences->AddChar("X-Force File Name",
-							&force_file_name_x);
-	m_pPreferences->AddChar("Y-Force File Name",
-							&force_file_name_y);
+	m_pPreferences->AddString("X Force File Name",
+							&m_sForceFileNameX);
+	m_pPreferences->AddString("Y Force File Name",
+							&m_sForceFileNameY);
 
     std::vector<std::string> botnames;
     for(unsigned int i = 0; i < 7; i++)
@@ -175,8 +175,6 @@ void BelugaTrackerFrame::initUserData()
     m_pSetupInfo->AddString("Quadrant IV Mask",
                             &m_sQuad4MaskPath);
 
-    initController();
-                            
     setTimer(FRAME_PERIOD_MSEC);
 
 }
@@ -184,7 +182,7 @@ void BelugaTrackerFrame::initUserData()
 void BelugaTrackerFrame::writeUserXML()
 {
     MT_RobotFrameBase::writeUserXML();
-
+ 
     WriteDataGroupToXML(&m_XMLSettingsFile, m_pSetupInfo);
 }
 
@@ -193,6 +191,9 @@ void BelugaTrackerFrame::readUserXML()
     MT_RobotFrameBase::readUserXML();
 
     ReadDataGroupFromXML(m_XMLSettingsFile, m_pSetupInfo);
+
+    /* THIS SHOULD NOT HAPPEN HERE - THIS IS A HACK */
+	initController();
 }
 
 void BelugaTrackerFrame::makeFileMenu(wxMenu* file_menu)
@@ -247,8 +248,9 @@ void BelugaTrackerFrame::initController()
     
     for(unsigned int i = 0; i < 4; i++)
     {
+		printf("Trying to load force file |%s|\n", m_sForceFileNameX.c_str());
         m_apWaypointController[i] = new BelugaWaypointControlLaw();
-        m_apBoundaryController[i] = new BelugaBoundaryControlLaw(force_file_name_x, force_file_name_y);
+        m_apBoundaryController[i] = new BelugaBoundaryControlLaw(m_sForceFileNameX.c_str(), m_sForceFileNameY.c_str());
 		m_apLowLevelController[i] = new BelugaLowLevelControlLaw();
         m_Controller.appendControlLawToBot(i, m_apWaypointController[i], mt_CONTROLLER_NO_GC);
 		m_Controller.appendControlLawToBot(i, m_apBoundaryController[i], mt_CONTROLLER_NO_GC);
