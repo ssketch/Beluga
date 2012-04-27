@@ -965,6 +965,42 @@ void BelugaTrackerFrame::doCommonGLDrawing(int slave_index)
 		}
 	}
 	glLineWidth(1.0);
+
+	if(m_pTracker)
+	{
+		double x = 0;
+	    double y = 0;
+		double fx = 0;
+		double fy = 0;
+
+		int ti;
+		std::vector<double> curr_state;
+		for(unsigned int i = 0; i < MT_MAX_NROBOTS; i++)
+		{
+			ti = m_Robots.TrackingIndex[i];
+			if(ti != MT_NOT_TRACKED)
+			{
+				x = m_pBelugaTracker->getBelugaCameraX(ti, slave_index);
+				y = m_pBelugaTracker->getBelugaCameraY(ti, slave_index);
+
+				m_apBoundaryController[i]->getLastForce(&fx, &fy);
+
+				MT_R3 center(x, m_ClientSize.GetHeight() - y, 0);
+				double length = sqrt(fx*fx + fy*fy);
+				double orientation = atan2(fy, fx);
+
+				//printf("fx = %f, fy = %f, length = %f, orientation = %f\n", fx, fy, length, orientation);
+
+				if(length > 0)
+				{
+					MT_DrawArrow(center, length, orientation, MT_White, 1);
+				}
+
+			}
+		}
+
+	}
+
     
 }
 

@@ -213,6 +213,8 @@ BelugaBoundaryControlLaw::BelugaBoundaryControlLaw(const char* force_file_name_x
 	: mt_ControlLaw(3 /* # control inputs */,
 					1 /* # parameters */),
 	  m_bActive(true),
+	  m_dLastFx(0),
+	  m_dLastFy(0),
 	  m_dGain(1e-6)     // must be calibrated for robots in tank
 {
     if (!loadForceFiles(force_file_name_x, force_file_name_y))
@@ -317,6 +319,9 @@ mt_dVector_t BelugaBoundaryControlLaw::doControl(const mt_dVector_t& state,
 	double fx = FX[i][j];
 	double fy = FY[i][j];
 	
+	m_dLastFx = fx;
+	m_dLastFy = fy;
+
 	//printf("Forces: %f, %f\n", fx, fy);
 	
 	/* calculate control parameters */
@@ -327,8 +332,8 @@ mt_dVector_t BelugaBoundaryControlLaw::doControl(const mt_dVector_t& state,
 	double dvy = ay*dt;
 	
 	/* convert control parameters (dvx & dvy) to the robot-body coordinates (dvr & dvth) */
-	double dvr = dvx*cos(th) - dvy*sin(th);
-	double dvth = dvx*sin(th) + dvy*cos(th);
+	double dvr = dvx*cos(th) + dvy*sin(th);
+	double dvth = -dvx*sin(th) + dvy*cos(th);
 	
 	//printf("Control efforts: speed %f, turning %f\n", dvr, dvth);
 
@@ -349,4 +354,10 @@ mt_dVector_t BelugaBoundaryControlLaw::doControl(const mt_dVector_t& state,
 	//printf("Control out: speed %f, vert %f, steer %f\n", u[BELUGA_CONTROL_FWD_SPEED], u[BELUGA_CONTROL_VERT_SPEED], u[BELUGA_CONTROL_STEERING]);
 	
     return u;
+}
+
+void BelugaBoundaryControlLaw::getLastForce(double* fx, double* fy) 
+{
+	*fx = m_dLastFx;
+	*fy = m_dLastFy;
 }
