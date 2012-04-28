@@ -213,9 +213,9 @@ BelugaBoundaryControlLaw::BelugaBoundaryControlLaw(const char* force_file_name_x
 	: mt_ControlLaw(3 /* # control inputs */,
 					1 /* # parameters */),
 	  m_bActive(true),
+	  m_dGain(1e-6),    // must be calibrated for robots in tank
 	  m_dLastFx(0),
-	  m_dLastFy(0),
-	  m_dGain(1e-6)     // must be calibrated for robots in tank
+	  m_dLastFy(0)
 {
     if (!loadForceFiles(force_file_name_x, force_file_name_y))
     {
@@ -277,7 +277,8 @@ bool BelugaBoundaryControlLaw::loadForceFiles(const char* force_file_name_x,
 	
 	forcesX.close();
 	forcesY.close();
-
+	
+	/* check that all forces were stored */
     unsigned int n_expected = (2*N_FORCE_GRID + 1)*(2*N_FORCE_GRID + 1);
     if (n_loaded < n_expected)
     {
@@ -287,6 +288,12 @@ bool BelugaBoundaryControlLaw::loadForceFiles(const char* force_file_name_x,
     }
 
     return true;
+}
+
+void BelugaBoundaryControlLaw::getLastForce(double* fx, double* fy) 
+{
+	*fx = m_dLastFx;
+	*fy = m_dLastFy;
 }
 
 mt_dVector_t BelugaBoundaryControlLaw::doControl(const mt_dVector_t& state,
@@ -303,26 +310,20 @@ mt_dVector_t BelugaBoundaryControlLaw::doControl(const mt_dVector_t& state,
     double y = state[BELUGA_STATE_Y];
 	double th = state[BELUGA_STATE_THETA];
 	
-	//printf("Position: %f, %f\n", x, y);
-	
 	double u_speed = u_in[BELUGA_CONTROL_FWD_SPEED];
     double u_vert = u_in[BELUGA_CONTROL_VERT_SPEED];
     double u_turn = u_in[BELUGA_CONTROL_STEERING];
 	
-	//printf("Speed Control IN: speed = %f, vert = %f, turn = %f\n", u_speed, u_vert, u_turn);
-	
-	/* get boundary force corresponding to grid-point closest to robot */
+	/* get boundary force corresponding to grid point closest to robot */
 	double rmax = 1.3*DEFAULT_TANK_RADIUS;
 	double step = rmax/N_FORCE_GRID;
-	unsigned int i = MT_CLAMP((floor(x/step + 0.5) + N_FORCE_GRID),0,2*N_FORCE_GRID);
-	unsigned int j = MT_CLAMP((floor(y/step + 0.5) + N_FORCE_GRID),0,2*N_FORCE_GRID);
+	unsigned int i = MT_CLAMP((floor(x/step + 0.5) + N_FORCE_GRID), 0, 2*N_FORCE_GRID);
+	unsigned int j = MT_CLAMP((floor(y/step + 0.5) + N_FORCE_GRID), 0, 2*N_FORCE_GRID);
 	double fx = FX[i][j];
 	double fy = FY[i][j];
 	
-	m_dLastFx = fx;
+	m_dLastFx = fx;  // for BelugaTrackerGUI visualization
 	m_dLastFy = fy;
-
-	//printf("Forces: %f, %f\n", fx, fy);
 	
 	/* calculate control parameters */
 	double ax = m_dGain*fx/m_eff;
@@ -334,8 +335,6 @@ mt_dVector_t BelugaBoundaryControlLaw::doControl(const mt_dVector_t& state,
 	/* convert control parameters (dvx & dvy) to the robot-body coordinates (dvr & dvth) */
 	double dvr = dvx*cos(th) + dvy*sin(th);
 	double dvth = -dvx*sin(th) + dvy*cos(th);
-	
-	//printf("Control efforts: speed %f, turning %f\n", dvr, dvth);
 
 	/* add in control parameters */
 	u_speed += dvr;
@@ -343,21 +342,23 @@ mt_dVector_t BelugaBoundaryControlLaw::doControl(const mt_dVector_t& state,
 	{
 		u_speed = 0;  // don't let robot drive in reverse
 	}
+	
+	double boundary = DEFAULT_TANK_RADIUS/sqrt((double) 2.0);
+	double buffer = 0.25;
+	double minSpeed = 0.1;
+	double maxTurn = 0.05*BELUGA_MAX_TURN;  // adjust 'buffer', 'minSpeed', and 'maxTurn' for optimum performance
+	
 	u_turn += dvth;
-
+	if ((boundary - fabs(x) < buffer || boundary - fabs(y) < buffer) && u_speed < minSpeed)
+	{
+		u_turn = maxTurn;  // to help robot escape from regions near boundaries
+	}
+	
 	u[BELUGA_CONTROL_FWD_SPEED] = u_speed;
     u[BELUGA_CONTROL_VERT_SPEED] = u_vert;
     u[BELUGA_CONTROL_STEERING] = u_turn;
-	
-	//printf("Speed Control OUT: speed = %f, vert = %f, turn = %f\n", u_speed, u_vert, u_turn);
     
-	//printf("Control out: speed %f, vert %f, steer %f\n", u[BELUGA_CONTROL_FWD_SPEED], u[BELUGA_CONTROL_VERT_SPEED], u[BELUGA_CONTROL_STEERING]);
+	//printf("Control out: speed %f, steer %f\n", u[BELUGA_CONTROL_FWD_SPEED], u[BELUGA_CONTROL_STEERING]);
 	
     return u;
-}
-
-void BelugaBoundaryControlLaw::getLastForce(double* fx, double* fy) 
-{
-	*fx = m_dLastFx;
-	*fy = m_dLastFy;
 }

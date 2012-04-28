@@ -128,9 +128,11 @@ int testBelugaBoundaryControlLaw()
 	if (!eq_wf(d_turn, 0.0))
 		RETURN_ERROR_ELSE_OK("Steering not zero, was " << u_out[BELUGA_CONTROL_STEERING]);
 	
-	/* check robot's response to boundaries in x and y, along the respective axes */
+	/* check robot's response to boundaries in x and y (up to buffer zone), along the respective axes */
 	double minDist = 0.5;
 	double step = 0.1;
+	double boundary = DEFAULT_TANK_RADIUS/sqrt((double) 2.0);
+	double buffer = 0.25;
 	
 	/* robot speed should decrease in x and not change in y the closer it gets to the +x boundary */
 	START_TEST("Checking +x boundary");
@@ -139,17 +141,17 @@ int testBelugaBoundaryControlLaw()
 	double th = state[BELUGA_STATE_THETA];
 	u_speed = u_in[BELUGA_CONTROL_FWD_SPEED];
     u_turn = u_in[BELUGA_CONTROL_STEERING];
-	double prev_vx = u_speed*cos(th) + u_turn*sin(th);
-	double prev_vy = -u_speed*sin(th) + u_turn*cos(th);
+	double prev_vx = u_speed*cos(th) - u_turn*sin(th);
+	double prev_vy = u_speed*sin(th) + u_turn*cos(th);
 	double dist = minDist;
-	while (dist < DEFAULT_TANK_RADIUS/sqrt((double) 2.0))
+	while (dist < boundary - buffer)
 	{
 		state[BELUGA_STATE_X] = dist;
 		u_out = control_law.doControl(state, u_in);
 		double vr = u_out[BELUGA_CONTROL_FWD_SPEED];
 		double vth = u_out[BELUGA_CONTROL_STEERING];
-		double vx = vr*cos(th) + vth*sin(th);
-		double vy = -vr*sin(th) + vth*cos(th);
+		double vx = vr*cos(th) - vth*sin(th);
+		double vy = vr*sin(th) + vth*cos(th);
 		if (vx > prev_vx)
 			RETURN_ERROR_ELSE_OK("Speed did not decrease in x, was " << vx);
 		double dvy = fabs(vy - prev_vy);
@@ -167,17 +169,17 @@ int testBelugaBoundaryControlLaw()
 	th = state[BELUGA_STATE_THETA];
 	u_speed = u_in[BELUGA_CONTROL_FWD_SPEED];
     u_turn = u_in[BELUGA_CONTROL_STEERING];
-	prev_vx = u_speed*cos(th) + u_turn*sin(th);
-	prev_vy = -u_speed*sin(th) + u_turn*cos(th);
+	prev_vx = u_speed*cos(th) - u_turn*sin(th);
+	prev_vy = u_speed*sin(th) + u_turn*cos(th);
 	dist = -minDist;
-	while (dist > -DEFAULT_TANK_RADIUS/sqrt((double) 2.0))
+	while (dist > -(boundary - buffer))
 	{
 		state[BELUGA_STATE_X] = dist;
 		u_out = control_law.doControl(state, u_in);
 		double vr = u_out[BELUGA_CONTROL_FWD_SPEED];
 		double vth = u_out[BELUGA_CONTROL_STEERING];
-		double vx = vr*cos(th) + vth*sin(th);
-		double vy = -vr*sin(th) + vth*cos(th);
+		double vx = vr*cos(th) - vth*sin(th);
+		double vy = vr*sin(th) + vth*cos(th);
 		if (vx < prev_vx)
 			RETURN_ERROR_ELSE_OK("Speed did not increase in x, was " << vx);
 		double dvy = fabs(vy - prev_vy);
@@ -195,17 +197,17 @@ int testBelugaBoundaryControlLaw()
 	th = state[BELUGA_STATE_THETA];
 	u_speed = u_in[BELUGA_CONTROL_FWD_SPEED];
     u_turn = u_in[BELUGA_CONTROL_STEERING];
-	prev_vx = u_speed*cos(th) + u_turn*sin(th);
-	prev_vy = -u_speed*sin(th) + u_turn*cos(th);
+	prev_vx = u_speed*cos(th) - u_turn*sin(th);
+	prev_vy = u_speed*sin(th) + u_turn*cos(th);
 	dist = minDist;
-	while (dist < DEFAULT_TANK_RADIUS/sqrt((double) 2.0))
+	while (dist < boundary - buffer)
 	{
 		state[BELUGA_STATE_Y] = dist;
 		u_out = control_law.doControl(state, u_in);
 		double vr = u_out[BELUGA_CONTROL_FWD_SPEED];
 		double vth = u_out[BELUGA_CONTROL_STEERING];
-		double vx = vr*cos(th) + vth*sin(th);
-		double vy = -vr*sin(th) + vth*cos(th);
+		double vx = vr*cos(th) - vth*sin(th);
+		double vy = vr*sin(th) + vth*cos(th);
 		if (vy > prev_vy)
 			RETURN_ERROR_ELSE_OK("Speed did not decrease in y, was " << vy);
 		double dvx = fabs(vx - prev_vx);
@@ -223,17 +225,17 @@ int testBelugaBoundaryControlLaw()
 	th = state[BELUGA_STATE_THETA];
 	u_speed = u_in[BELUGA_CONTROL_FWD_SPEED];
     u_turn = u_in[BELUGA_CONTROL_STEERING];
-	prev_vx = u_speed*cos(th) + u_turn*sin(th);
-	prev_vy = -u_speed*sin(th) + u_turn*cos(th);
+	prev_vx = u_speed*cos(th) - u_turn*sin(th);
+	prev_vy = u_speed*sin(th) + u_turn*cos(th);
 	dist = -minDist;
-	while (dist > -DEFAULT_TANK_RADIUS/sqrt((double) 2.0))
+	while (dist > -(boundary - buffer))
 	{
 		state[BELUGA_STATE_Y] = dist;
 		u_out = control_law.doControl(state, u_in);
 		double vr = u_out[BELUGA_CONTROL_FWD_SPEED];
 		double vth = u_out[BELUGA_CONTROL_STEERING];
-		double vx = vr*cos(th) + vth*sin(th);
-		double vy = -vr*sin(th) + vth*cos(th);
+		double vx = vr*cos(th) - vth*sin(th);
+		double vy = vr*sin(th) + vth*cos(th);
 		if (vy < prev_vy)
 			RETURN_ERROR_ELSE_OK("Speed did not increase in y, was " << vy);
 		double dvx = fabs(vx - prev_vx);

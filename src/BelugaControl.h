@@ -59,7 +59,7 @@ public:
 protected:
     bool m_bActive;
 	
-	static const unsigned int N_FORCE_GRID = 20;    // from MATLAB gridding_window.m code
+	static const unsigned int N_FORCE_GRID = 20;
 	double FX[2*N_FORCE_GRID+1][2*N_FORCE_GRID+1];
 	double FY[2*N_FORCE_GRID+1][2*N_FORCE_GRID+1];
 
