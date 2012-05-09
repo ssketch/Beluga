@@ -78,5 +78,4 @@ BelugaBoundaryControlLaw* belugaBoundaryControlLawFactory(unsigned int bot_num,
                                                           const char* force_file_name_x,
                                                           const char* force_file_name_y);
 
-
 #endif // BELUGA_CONTROL_H
