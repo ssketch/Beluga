@@ -346,7 +346,7 @@ mt_dVector_t BelugaBoundaryControlLaw::doControl(const mt_dVector_t& state,
 	double boundary = DEFAULT_TANK_RADIUS/sqrt((double) 2.0);
 	double buffer = 0.25;
 	double minSpeed = 0.1;
-	double maxTurn = BELUGA_MAX_TURN;  // adjust 'buffer', 'minSpeed', and 'maxTurn' for optimum performance
+	double maxTurn = BELUGA_MAX_TURN;  // adjust 'buffer', 'minSpeed', and 'maxTurn' (may need to change sign based on robot's angle of approach to the boundary) for optimum performance
 	
 	u_turn += dvth;
 	if ((boundary - fabs(x) < buffer || boundary - fabs(y) < buffer) && u_speed < minSpeed)
